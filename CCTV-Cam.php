@@ -15,7 +15,7 @@ $headers = array(
     'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36'
 );
 
-// Initialize cURL session
+// Initialize cURL session to fetch JSON countries data
 $ch = curl_init();
 curl_setopt($ch, CURLOPT_URL, $url);
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -39,16 +39,14 @@ try {
     $countries = $data['countries'];
 
     // Print ASCII art
-    echo <<<ASCIIART
-    \033[1;31m\033[1;37m 
+    echo "\033[1;31m\033[1;37m 
 	    _____________________________    __   _________
 __  ____/__  ____/___  __/__ |  / /   __  ____/______ ________ ___
 _  /     _  /     __  /   __ | / /    _  /     _  __ `/__  __ `__ \
 / /___   / /___   _  /    __ |/ /     / /___   / /_/ / _  / / / / /
 \____/   \____/   /_/     _____/      \____/   \__,_/  /_/ /_/ /_/
 
-    \033[1;31m                                                                        EliezerSunny \033[1;31m\033[1;37m
-ASCIIART;
+    \033[1;31m                                                                        EliezerSunny \033[1;31m\033[1;37m\n";
 
     // Display countries
     foreach ($countries as $key => $value) {
@@ -58,7 +56,13 @@ ASCIIART;
     // Get user input for country code
     $country = readline("Code(##) : ");
 
-    // Fetch camera information
+    // Validate country code input
+    if (!isset($countries[$country])) {
+        echo "Error: Invalid country code.\n";
+        exit;
+    }
+
+    // Fetch camera information for the selected country
     $url = "http://www.insecam.org/en/bycountry/$country";
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $url);
@@ -66,6 +70,7 @@ ASCIIART;
     curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
     $response = curl_exec($ch);
 
+    // Check for cURL errors
     if (curl_errno($ch)) {
         echo 'Error:' . curl_error($ch);
         exit;
@@ -73,17 +78,24 @@ ASCIIART;
 
     curl_close($ch);
 
-    // Extract last page number
+    // Extract last page number using regex
     $matches = [];
     preg_match('/pagenavigator\("\?page=", (\d+)/', $response, $matches);
 
+    // Check if last page number was found
     if (isset($matches[1])) {
         $last_page = $matches[1];
 
-        // Write IP addresses to file
+        // Prepare filename for saving IP addresses
         $filename = "$country.txt";
         $fp = fopen($filename, 'w');
 
+        if (!$fp) {
+            echo "Error: Unable to open file for writing.\n";
+            exit;
+        }
+
+        // Loop through each page and extract IP addresses
         for ($page = 0; $page < $last_page; $page++) {
             $url = "http://www.insecam.org/en/bycountry/$country/?page=$page";
             $ch = curl_init();
@@ -92,14 +104,16 @@ ASCIIART;
             curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
             $response = curl_exec($ch);
 
+            // Check for cURL errors
             if (curl_errno($ch)) {
                 echo 'Error:' . curl_error($ch);
+                fclose($fp);
                 exit;
             }
 
             curl_close($ch);
 
-            // Find IP addresses using regex
+            // Find and write IP addresses using regex
             preg_match_all('/http:\/\/\d+\.\d+\.\d+\.\d+:\d+/', $response, $matches);
             foreach ($matches[0] as $ip) {
                 echo "\n\033[1;31m $ip";
@@ -117,6 +131,8 @@ ASCIIART;
 }
 
 // Final message
-echo "\033[1;37m\nSave File : $filename\n";
+if (isset($filename)) {
+    echo "\033[1;37m\nSave File : $filename\n";
+}
 exit();
 ?>
