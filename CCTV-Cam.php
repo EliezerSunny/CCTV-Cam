@@ -74,37 +74,43 @@ ASCIIART;
     curl_close($ch);
 
     // Extract last page number
+    $matches = [];
     preg_match('/pagenavigator\("\?page=", (\d+)/', $response, $matches);
-    $last_page = $matches[1];
 
-    // Write IP addresses to file
-    $filename = "$country.txt";
-    $fp = fopen($filename, 'w');
+    if (isset($matches[1])) {
+        $last_page = $matches[1];
 
-    for ($page = 0; $page < $last_page; $page++) {
-        $url = "http://www.insecam.org/en/bycountry/$country/?page=$page";
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-        $response = curl_exec($ch);
+        // Write IP addresses to file
+        $filename = "$country.txt";
+        $fp = fopen($filename, 'w');
 
-        if (curl_errno($ch)) {
-            echo 'Error:' . curl_error($ch);
-            exit;
+        for ($page = 0; $page < $last_page; $page++) {
+            $url = "http://www.insecam.org/en/bycountry/$country/?page=$page";
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+            $response = curl_exec($ch);
+
+            if (curl_errno($ch)) {
+                echo 'Error:' . curl_error($ch);
+                exit;
+            }
+
+            curl_close($ch);
+
+            // Find IP addresses using regex
+            preg_match_all('/http:\/\/\d+\.\d+\.\d+\.\d+:\d+/', $response, $matches);
+            foreach ($matches[0] as $ip) {
+                echo "\n\033[1;31m $ip";
+                fwrite($fp, "$ip\n");
+            }
         }
 
-        curl_close($ch);
-
-        // Find IP addresses using regex
-        preg_match_all('/http:\/\/\d+\.\d+\.\d+\.\d+:\d+/', $response, $matches);
-        foreach ($matches[0] as $ip) {
-            echo "\n\033[1;31m $ip";
-            fwrite($fp, "$ip\n");
-        }
+        fclose($fp);
+    } else {
+        echo "Error: Last page number not found.\n";
     }
-
-    fclose($fp);
 
 } catch (Exception $e) {
     echo "An error occurred: {$e->getMessage()}";
