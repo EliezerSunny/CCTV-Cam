@@ -1,6 +1,8 @@
 # CCTV-Cam
 
-CCTV Cameras
+CCTV Cameras 
+
+\e[3mNote: It's fir Education purpose\e[0m
 
 <h3> Run Command: </h3>
 
@@ -16,4 +18,4 @@ CCTV Cameras
 
 * pip install colorama
 
-* python3 CCTV-Cam.py 
+* python3 CCTV-Cam.py
