@@ -2,7 +2,7 @@
 
 CCTV Cameras 
 
-\e[3mNote: It's fir Education purpose\e[0m
+<i style="color:red">Note: It's for Education purpose</i>
 
 <h3> Run Command: </h3>
 
