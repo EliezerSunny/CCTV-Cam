@@ -2,7 +2,7 @@
 
 CCTV Cameras 
 
-<i style="color:red">Note: It's for Education purpose</i>
+<i><b>Note:</b> It's for Education purpose</i>
 
 <h3> Run Command: </h3>
 
